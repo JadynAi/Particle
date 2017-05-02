@@ -20,12 +20,12 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                haha();
+                click();
             }
         });
     }
 
-    public void haha() {
+    public void click() {
         if (mLizi1.getVisibility() == View.VISIBLE) {
             mLizi1.setVisibility(View.GONE);
             mLizi2.setVisibility(View.VISIBLE);
