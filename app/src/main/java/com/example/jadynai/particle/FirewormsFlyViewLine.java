@@ -110,10 +110,9 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
                         // 清屏
                         mCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
 
-//                        for (FloatParticleLine circle : mCircles) {
-//                            circle.drawItem(mCanvas);
-//                        }
-                        mCircles.get(0).drawItem(mCanvas);
+                        for (FloatParticleLine circle : mCircles) {
+                            circle.drawItem(mCanvas);
+                        }
                         // 控制帧数
                         Thread.sleep(25);
                     }
