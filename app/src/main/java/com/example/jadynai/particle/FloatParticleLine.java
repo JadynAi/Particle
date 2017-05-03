@@ -19,8 +19,13 @@ public class FloatParticleLine {
 
     public static final int ALPHA_MAX = 200;
 
+    public static final float INNER_RATIO = 0.4f;
+
     // 火花外侧阴影大小
     private static final float BLUR_SIZE = 2.5f;
+
+    private static final float DEFAULT_RADIUS = 5f;
+
     private static final String TAG = "FloatParticle";
 
     private Random mRandom = new Random();
@@ -31,14 +36,15 @@ public class FloatParticleLine {
 
     private float mStartX, mStartY;
 
-    private float mRadius = 5f;
+    private float mRadius = DEFAULT_RADIUS;
+    private float mStartRadius = DEFAULT_RADIUS;
+
     private float mDisX;
     private float mDisY;
 
     private boolean mIsAddX;
     private boolean mIsAddY;
     private float mDistance;
-
 
     public FloatParticleLine(float x, float y, int width, int height) {
         this.mWidth = width;
@@ -66,12 +72,15 @@ public class FloatParticleLine {
     }
 
     private void setRandomParm() {
+        // 2017/5/2-上午10:47 x和y的方向
         mIsAddX = mRandom.nextBoolean();
         mIsAddY = mRandom.nextBoolean();
 
+        // 2017/5/2-上午10:47 x和y的取值
         mDisX = mRandom.nextInt(2) + 0.2f;
         mDisY = mRandom.nextInt(2) + 0.3f;
 
+        // 2017/5/2-上午10:47 内部区域的运动最远距离
         mDistance = mRandom.nextInt((int) (0.25f * mWidth)) + (0.125f * mWidth);
     }
 
@@ -81,16 +90,11 @@ public class FloatParticleLine {
         }
         canvas.drawCircle(mX += getPNValue(mIsAddX, mDisX), mY += getPNValue(mIsAddY, mDisY), mRadius, mPaint);
         if (judgeInner()) {
-            float gapX = mX - mStartX;
+            float gapX = Math.abs(mX - mStartX);
             float ratio = 1 - (gapX / mDistance);
             mPaint.setAlpha((int) (255 * ratio));
-
-            if (gapX >= mDistance) {
-                resetDisXY();
-                return;
-            }
-
-            if (mY - mStartY >= mDistance) {
+            mRadius = mStartRadius * ratio;
+            if (gapX >= mDistance || mY - mStartY >= mDistance) {
                 resetDisXY();
                 return;
             }
@@ -103,12 +107,11 @@ public class FloatParticleLine {
     }
 
     private boolean judgeInner() {
-        float ratio = 0.4f;
-        float judgeWL = ratio * mWidth;
-        float judgeWR = (1 - ratio) * mWidth;
+        float judgeWL = INNER_RATIO * mWidth;
+        float judgeWR = (1 - INNER_RATIO) * mWidth;
 
-        float judgeHT = ratio * mHeight;
-        float judgeHB = (1 - ratio) * mHeight;
+        float judgeHT = INNER_RATIO * mHeight;
+        float judgeHB = (1 - INNER_RATIO) * mHeight;
 
         boolean judgeX = mX >= judgeWL && mX <= judgeWR;
         boolean judgeY = mY >= judgeHT && mY <= judgeHB;
@@ -135,6 +138,7 @@ public class FloatParticleLine {
         mPaint.setAlpha(0);
         mX = mStartX;
         mY = mStartY;
+        mRadius = mStartRadius;
     }
 
     private float getPNValue(boolean isAdd, float value) {
@@ -147,5 +151,6 @@ public class FloatParticleLine {
 
     public void setRadius(float radius) {
         mRadius = radius;
+        mStartRadius = radius;
     }
 }

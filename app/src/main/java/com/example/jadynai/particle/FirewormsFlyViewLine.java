@@ -79,7 +79,7 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
 
     private float getF() {
         float v = mRandom.nextFloat();
-        if (v <= 0.2f) {
+        if (v < 0.2f) {
             return v + 0.2f;
         } else if (v >= 0.85f) {
             return v - 0.2f;
@@ -110,9 +110,10 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
                         // 清屏
                         mCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
 
-                        for (FloatParticleLine circle : mCircles) {
-                            circle.drawItem(mCanvas);
-                        }
+//                        for (FloatParticleLine circle : mCircles) {
+//                            circle.drawItem(mCanvas);
+//                        }
+                        mCircles.get(0).drawItem(mCanvas);
                         // 控制帧数
                         Thread.sleep(25);
                     }
