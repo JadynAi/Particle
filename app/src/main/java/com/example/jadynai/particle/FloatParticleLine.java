@@ -1,9 +1,11 @@
 package com.example.jadynai.particle;
 
+import android.content.res.Resources;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.TypedValue;
 
 import java.util.Random;
 
@@ -17,16 +19,16 @@ import java.util.Random;
 
 public class FloatParticleLine {
 
-    public static final int ALPHA_MAX = 200;
+    private static final String TAG = "FloatParticle";
 
-    public static final float INNER_RATIO = 0.4f;
+    private static final int ALPHA_MAX = 200;
+    private static final int ALPHA_MIN = 50;
+
+    private static final float INNER_RATIO = 0.2f;
 
     // 火花外侧阴影大小
     private static final float BLUR_SIZE = 2.5f;
-
-    private static final float DEFAULT_RADIUS = 5f;
-
-    private static final String TAG = "FloatParticle";
+    private static final float DEFAULT_RADIUS = 2f;
 
     private Random mRandom = new Random();
     private Paint mPaint = new Paint();
@@ -45,6 +47,8 @@ public class FloatParticleLine {
     private boolean mIsAddX;
     private boolean mIsAddY;
     private float mDistance;
+
+    private boolean mIsNeedChange = true;
 
     public FloatParticleLine(float x, float y, int width, int height) {
         this.mWidth = width;
@@ -77,31 +81,44 @@ public class FloatParticleLine {
         mIsAddY = mRandom.nextBoolean();
 
         // 2017/5/2-上午10:47 x和y的取值
-        mDisX = mRandom.nextInt(2) + 0.2f;
-        mDisY = mRandom.nextInt(2) + 0.3f;
+        mDisX = mRandom.nextFloat() + 1.05f;
+        mDisY = mRandom.nextFloat() + 1.1f;
 
-        // 2017/5/2-上午10:47 内部区域的运动最远距离
-        mDistance = mRandom.nextInt((int) (0.25f * mWidth)) + (0.125f * mWidth);
+        // 2017/5/9-上午11:43 判断移动的最大距离
+        if (judgeInner()) {
+            mDistance = mRandom.nextInt((int) (0.5f * mWidth)) + (0.25f * mWidth);
+        } else {
+            if (mIsAddX && mIsAddY) {
+                // 右下
+                mDistance = getHypotenuse(mWidth - mStartX, mHeight - mStartY);
+            } else if (!mIsAddX && mIsAddY) {
+                // 左下
+                mDistance = getHypotenuse(mStartX, mHeight - mStartY);
+            } else if (mIsAddX && !mIsAddY) {
+                // 右上
+                mDistance = getHypotenuse(mWidth - mStartX, mStartY);
+            } else {
+                mDistance = getHypotenuse(mStartX, mStartY);
+            }
+            mDistance = mDistance - 10f;
+        }
+
+        mIsNeedChange = mDistance >= (0.4f * getHypotenuse(0.5 * mWidth, 0.5 * mHeight));
     }
 
     public void drawItem(Canvas canvas) {
         if (mX == mStartX) {
             mPaint.setAlpha(ALPHA_MAX);
         }
+        //绘制
         canvas.drawCircle(mX += getPNValue(mIsAddX, mDisX), mY += getPNValue(mIsAddY, mDisY), mRadius, mPaint);
-        if (judgeInner()) {
-            float gapX = Math.abs(mX - mStartX);
-            float ratio = 1 - (gapX / mDistance);
-            mPaint.setAlpha((int) (255 * ratio));
+        double moveDis = Math.sqrt(Math.pow(mX - mStartX, 2) + Math.pow(mY - mStartY, 2));
+        if (mIsNeedChange) {
+            float ratio = (float) (1 - (moveDis / mDistance));
+            mPaint.setAlpha((int) (ALPHA_MAX * ratio));
             mRadius = mStartRadius * ratio;
-            if (gapX >= mDistance || mY - mStartY >= mDistance) {
-                resetDisXY();
-                return;
-            }
-            return;
         }
-
-        if (judgeOutline()) {
+        if (moveDis >= mDistance || mPaint.getAlpha() <= ALPHA_MIN) {
             resetDisXY();
         }
     }
@@ -122,6 +139,7 @@ public class FloatParticleLine {
         }
     }
 
+    @Deprecated
     private boolean judgeOutline() {
         boolean x = mX <= 0 || mX >= (mWidth - 10);
         boolean y = mY <= 0 || mY >= (mHeight - 10);
@@ -142,15 +160,32 @@ public class FloatParticleLine {
     }
 
     private float getPNValue(boolean isAdd, float value) {
-        return isAdd ? value : 0 - value;
+        return isAdd ? value : (0 - value);
     }
 
     public float getRadius() {
         return mRadius;
     }
 
+
+    private boolean is = true;
+
     public void setRadius(float radius) {
-        mRadius = radius;
-        mStartRadius = radius;
+        mRadius = dip2Px(radius);
+        mStartRadius = mRadius;
+    }
+
+    private int dip2Px(float pxValue) {
+        int dp = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, pxValue, Resources.getSystem().getDisplayMetrics());
+        return dp;
+    }
+
+    /**
+     * @param x
+     * @param y
+     * @return 斜边
+     */
+    private float getHypotenuse(double x, double y) {
+        return (float) Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
     }
 }

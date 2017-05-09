@@ -68,7 +68,7 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
         if (mCircles.size() == 0) {
             for (int i = 0; i < MAX_NUM; i++) {
                 FloatParticleLine f = new FloatParticleLine(getF() * mMeasuredWidth, getF() * mMeasuredHeight, mMeasuredWidth, mMeasuredHeight);
-                f.setRadius(mRandom.nextInt(2) + 1.2f);
+                f.setRadius(mRandom.nextFloat() + 1.0f);
                 mCircles.add(f);
             }
         }
@@ -79,10 +79,10 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
 
     private float getF() {
         float v = mRandom.nextFloat();
-        if (v < 0.2f) {
-            return v + 0.2f;
+        if (v < 0.15f) {
+            return v + 0.15f;
         } else if (v >= 0.85f) {
-            return v - 0.2f;
+            return v - 0.15f;
         } else {
             return v;
         }
