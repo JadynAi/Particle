@@ -1,5 +1,6 @@
 package com.example.jadynai.particle.view;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
@@ -8,9 +9,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
+import android.media.ThumbnailUtils;
 import android.support.annotation.DrawableRes;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
@@ -31,7 +33,7 @@ import java.util.Random;
 public class FirewormsView extends View {
 
     private static final String TAG = "FirewormsFlyView";
-    public static final int MAX_NUM = 20;
+    public static final int MAX_NUM = 25;
 
     private int mMeasuredWidth;
     private int mMeasuredHeight;
@@ -43,9 +45,8 @@ public class FirewormsView extends View {
     private Paint mPaint;
     private Bitmap mStarBitmap;
     private Matrix mMatrix;
-    private Context mContext;
-    private Bitmap mBufferBitmap;
-    private Canvas mBufferCanvas;
+    private int mCurResId;
+    private ValueAnimator mParticleAnim;
 
     public FirewormsView(Context context) {
         super(context);
@@ -62,6 +63,35 @@ public class FirewormsView extends View {
         init(context, attrs);
     }
 
+    private void init(Context context, AttributeSet attrs) {
+        mPaint = new Paint();
+
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.FirewormsView);
+        int resourceId = typedArray.getResourceId(R.styleable.FirewormsView_particalSrc, R.drawable.fish_master);
+
+        mCurResId = resourceId;
+
+        // 打开抗锯齿
+        mPaint.setAntiAlias(true);
+        mPaint.setColor(Color.WHITE);
+        mPaint.setAlpha(Particle.ALPHA_MAX);
+        mPaint.setDither(true);
+        mPaint.setStyle(Paint.Style.FILL);
+        mMatrix = new Matrix();
+        mStarBitmap = getParticleBitmap(resourceId);
+
+        setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        typedArray.recycle();
+
+        mParticleAnim = ValueAnimator.ofInt(0).setDuration(Integer.MAX_VALUE);
+        mParticleAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                invalidate();
+            }
+        });
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -75,45 +105,27 @@ public class FirewormsView extends View {
                 mCircles.add(f);
             }
         }
-    }
-
-    private void init(Context context, AttributeSet attrs) {
-        mContext = context;
-        mPaint = new Paint();
-
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.FirewormsView);
-        int resourceId = typedArray.getResourceId(R.styleable.FirewormsView_particalSrc, R.drawable.fish_master);
-
-        // 打开抗锯齿
-        mPaint.setAntiAlias(true);
-        mPaint.setColor(Color.WHITE);
-        mPaint.setAlpha(Particle.ALPHA_MAX);
-        mPaint.setDither(true);
-        mPaint.setStyle(Paint.Style.FILL);
-        mMatrix = new Matrix();
-        mStarBitmap = getParticleBitmap(resourceId);
-
-        setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        typedArray.recycle();
+        if (!mParticleAnim.isRunning()) {
+            Log.d(TAG, "onMeasure  anim start  : ");
+            mParticleAnim.start();
+        }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (null == mBufferBitmap) {
-            mBufferBitmap = Bitmap.createBitmap(mMeasuredWidth, mMeasuredHeight, Bitmap.Config.ARGB_8888);
-            mBufferCanvas = new Canvas(mBufferBitmap);
-        }
-        //每次重绘之前先把BufferBitmap清空
-        mBufferCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        canvas.save();
         for (Particle circle : mCircles) {
-            circle.drawItem(mBufferCanvas);
+            circle.drawItem(canvas);
         }
-        canvas.drawBitmap(mBufferBitmap, 0, 0, null);
-        invalidate();
+        canvas.restore();
     }
 
     public void setParticleSrcID(@DrawableRes int resId) {
+        if (mCurResId == resId) {
+            return;
+        }
+        mCurResId = resId;
         for (Particle circle : mCircles) {
             circle.setDrawBitmap(getParticleBitmap(resId));
         }
@@ -130,8 +142,9 @@ public class FirewormsView extends View {
     private Bitmap getParticleBitmap(@DrawableRes int resId) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
-        return Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getContext().getResources(), resId, options),
-                dip2px(30), dip2px(30), true);
+        return ThumbnailUtils.extractThumbnail(BitmapFactory.decodeResource(getContext().getResources(), resId, options), dip2px(30), dip2px(30), ThumbnailUtils.OPTIONS_RECYCLE_INPUT);
+//        return Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getContext().getResources(), resId, options),
+//                dip2px(30), dip2px(30), true);
     }
 
     private float getF() {
@@ -145,8 +158,24 @@ public class FirewormsView extends View {
         }
     }
 
+    public void startFly() {
+        if (mParticleAnim.isRunning()) {
+            mParticleAnim.end();
+        }
+        mParticleAnim.start();
+    }
+
+    public void stopFly() {
+        mParticleAnim.end();
+    }
+
     private int dip2px(float value) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, getContext().getResources().getDisplayMetrics());
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        Log.d(TAG, "onDetachedFromWindow: ");
+    }
 }

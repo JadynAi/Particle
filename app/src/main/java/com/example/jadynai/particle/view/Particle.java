@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.util.Log;
 import android.util.TypedValue;
 
 import java.util.Random;
@@ -77,7 +78,7 @@ public class Particle {
     private void setRandomParm() {
         mDisX = mRandom.nextInt(2) + 1.2f;
         mDisY = mRandom.nextInt(2) + 1.2f;
-        mAddDegree = mRandom.nextInt(5) + 5f;
+        mAddDegree = mRandom.nextInt(5) + 3f;
     }
 
     public void drawItem(Canvas canvas) {
@@ -86,22 +87,34 @@ public class Particle {
         mBitmapMatrix.preTranslate(mX += getPNValue(mIsAddX, mDisX), mY += getPNValue(mIsAddY, mDisY));
         mBitmapMatrix.preRotate(mDegrees += mAddDegree, mBitmapCenterX, mBitmapCenterY);
         canvas.drawBitmap(mDrawBitmap, mBitmapMatrix, mPaint);
-
+        Log.d(TAG, "mX : " + mX);
+        Log.d(TAG, "mY : " + mY);
         judgeOutline();
     }
 
     private void judgeOutline() {
-        boolean x = mX <= 0 || mX >= (mWidth - mDrawBitmapWidth);
-        boolean y = mY <= 0 || mY >= (mHeight - mDrawBitmapHeight);
-        if (x) {
+        boolean judgeX = mX <= 0 || mX >= (mWidth - mDrawBitmapWidth);
+        boolean judgeY = mY <= 0 || mY >= (mHeight - mDrawBitmapHeight);
+        if (judgeX) {
             mIsAddX = !mIsAddX;
             mIsAddY = mRandom.nextBoolean();
             setRandomParm();
+            if (mX <= 0) {
+                mX = 0;
+            } else {
+                mX = mWidth - mDrawBitmapWidth;
+            }
+            return;
         }
-        if (y) {
+        if (judgeY) {
             mIsAddY = !mIsAddY;
             mIsAddX = mRandom.nextBoolean();
             setRandomParm();
+            if (mY <= 0) {
+                mY = 0;
+            } else {
+                mY = mHeight - mDrawBitmapHeight;
+            }
         }
     }
 

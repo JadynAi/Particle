@@ -79,7 +79,7 @@
             android:layout_weight="1"
             android:drawableRight="@drawable/doge"
             android:gravity="center_vertical"
-            android:text="设置图像"
+            android:text="设置Doge"
             />
 
         <TextView
