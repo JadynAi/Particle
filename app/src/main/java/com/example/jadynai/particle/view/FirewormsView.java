@@ -1,5 +1,7 @@
 package com.example.jadynai.particle.view;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -83,10 +85,13 @@ public class FirewormsView extends View {
         setLayerType(View.LAYER_TYPE_HARDWARE, null);
         typedArray.recycle();
 
-        mParticleAnim = ValueAnimator.ofInt(0).setDuration(Integer.MAX_VALUE);
-        mParticleAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        mParticleAnim = ValueAnimator.ofInt(0).setDuration(30);
+        mParticleAnim.setRepeatCount(ValueAnimator.INFINITE);
+        mParticleAnim.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
+            public void onAnimationRepeat(Animator animation) {
+                super.onAnimationRepeat(animation);
+                Log.d(TAG, "onAnimationRepeat: " + System.currentTimeMillis());
                 invalidate();
             }
         });
@@ -177,5 +182,9 @@ public class FirewormsView extends View {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         Log.d(TAG, "onDetachedFromWindow: ");
+        if (null != mParticleAnim) {
+            mParticleAnim.end();
+            mParticleAnim = null;
+        }
     }
 }

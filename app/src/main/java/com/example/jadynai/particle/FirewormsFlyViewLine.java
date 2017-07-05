@@ -1,14 +1,23 @@
 package com.example.jadynai.particle;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
+import android.media.ThumbnailUtils;
+import android.support.annotation.DrawableRes;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import com.example.jadynai.particle.view.Particle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +34,7 @@ import java.util.Random;
 public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.Callback, Runnable {
 
     private static final String TAG = "FirewormsFlyView";
-    public static final int MAX_NUM = 160;
+    public static final int MAX_NUM = 25;
     private SurfaceHolder mHolder;
     private Canvas mCanvas;
 
@@ -36,7 +45,11 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
 
     private Random mRandom = new Random();
 
-    private List<FloatParticleLine> mCircles = new ArrayList<>();
+    private List<Particle> mCircles = new ArrayList<>();
+
+    private Paint mPaint;
+    private Bitmap mStarBitmap;
+    private Matrix mMatrix;
 
     public FirewormsFlyViewLine(Context context) {
         super(context);
@@ -58,6 +71,15 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
         mHolder.addCallback(this);
         setZOrderOnTop(true);//设置画布  背景透明
         mHolder.setFormat(PixelFormat.TRANSLUCENT);
+        mPaint = new Paint();
+
+        mPaint.setAntiAlias(true);
+        mPaint.setColor(Color.WHITE);
+        mPaint.setAlpha(Particle.ALPHA_MAX);
+        mPaint.setDither(true);
+        mPaint.setStyle(Paint.Style.FILL);
+        mMatrix = new Matrix();
+        mStarBitmap = getParticleBitmap(R.drawable.fish_master);
     }
 
     @Override
@@ -67,8 +89,8 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
 
         if (mCircles.size() == 0) {
             for (int i = 0; i < MAX_NUM; i++) {
-                FloatParticleLine f = new FloatParticleLine(getF() * mMeasuredWidth, getF() * mMeasuredHeight, mMeasuredWidth, mMeasuredHeight);
-                f.setRadius(mRandom.nextFloat() + 1.0f);
+                Particle f = new Particle(mStarBitmap, mMatrix, mPaint, getF() * mMeasuredWidth, getF() * mMeasuredHeight, mMeasuredWidth, mMeasuredHeight);
+//                f.setRadius(mRandom.nextFloat() + 1.0f);
                 mCircles.add(f);
             }
         }
@@ -86,6 +108,14 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
         } else {
             return v;
         }
+    }
+
+    private Bitmap getParticleBitmap(@DrawableRes int resId) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
+        return ThumbnailUtils.extractThumbnail(BitmapFactory.decodeResource(getContext().getResources(), resId, options), dip2px(30), dip2px(30), ThumbnailUtils.OPTIONS_RECYCLE_INPUT);
+//        return Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getContext().getResources(), resId, options),
+//                dip2px(30), dip2px(30), true);
     }
 
     @Override
@@ -110,7 +140,7 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
                         // 清屏
                         mCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
 
-                        for (FloatParticleLine circle : mCircles) {
+                        for (Particle circle : mCircles) {
                             circle.drawItem(mCanvas);
                         }
                         // 控制帧数
@@ -131,5 +161,9 @@ public class FirewormsFlyViewLine extends SurfaceView implements SurfaceHolder.C
         mCanvas = mHolder.lockCanvas();
         mCanvas.drawColor(Color.TRANSPARENT);
         mHolder.unlockCanvasAndPost(mCanvas);
+    }
+
+    private int dip2px(float value) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, getContext().getResources().getDisplayMetrics());
     }
 }
