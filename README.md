@@ -1,12 +1,12 @@
 > 原创文章，转载请注明出处
 *我的博客地址--->* [这里！这里！](http://ailoli.me/)
 
-## 新增解决方案，不再继承SurfaceView，而是继承自View。文章地址：[新的粒子动画](https://ailoli.me/2017/06/28/%E7%B2%92%E5%AD%90%E5%8D%87%E7%BA%A7/)
+## 新增解决方案，不再继承SurfaceView，而是继承自View。文章地址：[新的粒子动画](https://ailoli.me/2017/06/28/android_partical/)
 
 ## 萤火虫飞舞粒子效果
 >本项目中我提供了两种方案，最终呈现的效果如下：
 
-![](http://JadynAi.github.io/img/20170428-blog-particle.gif)
+![](https://raw.githubusercontent.com/JadynAi/oldpage.io/master/img/20170428-blog-particle.gif)
 
 ## 实现原理
 
